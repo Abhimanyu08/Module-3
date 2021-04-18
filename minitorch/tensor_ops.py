@@ -29,8 +29,14 @@ def tensor_map(fn):
     """
 
     def _map(out, out_shape, out_strides, in_storage, in_shape, in_strides):
-        raise NotImplementedError('Need to include this file from past assignment.')
-
+        # TODO: Implement for Task 2.2.
+        for i in range(len(out)):
+            big_index = [0]*len(out_shape)
+            count(i, out_shape, big_index)
+            in_index = [0]*len(in_shape)
+            broadcast_index(big_index, out_shape, in_shape, in_index)
+            pos = index_to_position(in_index, in_strides)
+            out[i] = fn(in_storage[pos])
     return _map
 
 
@@ -49,7 +55,7 @@ def map(fn):
                should broadcast with `a`
 
     Returns:
-        :class:`Tensor` : new tensor
+        :class:`TensorData` : new tensor data
     """
 
     f = tensor_map(fn)
@@ -98,7 +104,27 @@ def tensor_zip(fn):
         b_shape,
         b_strides,
     ):
-        raise NotImplementedError('Need to include this file from past assignment.')
+        # TODO: Implement for Task 2.2.
+        for i in range(len(out)):
+            if len(a_storage) > len(b_storage):
+                out_index = [0]*len(out_shape)
+                count(i, out_shape, out_index)
+                in_index = [0]*len(b_shape)
+                broadcast_index(out_index, out_shape, b_shape, in_index)
+                pos = index_to_position(in_index, b_strides)
+                out[i] = fn(a_storage[i], b_storage[pos])
+
+            elif len(b_storage) > len(a_storage):
+                out_index = [0]*len(out_shape)
+                count(i, out_shape, out_index)
+                in_index = [0]*len(a_shape)
+                broadcast_index(out_index, out_shape, a_shape, in_index)
+                pos = index_to_position(in_index, a_strides)
+                out[i] = fn(a_storage[pos], b_storage[i])
+
+            else:
+                out[i] = fn(a_storage[i], b_storage[i])
+
 
     return _zip
 
@@ -116,7 +142,7 @@ def zip(fn):
         b (:class:`TensorData`): tensor to zip over
 
     Returns:
-        :class:`Tensor` : new tensor
+        :class:`TensorData` : new tensor data
     """
 
     f = tensor_zip(fn)
@@ -165,7 +191,30 @@ def tensor_reduce(fn):
         reduce_shape,
         reduce_size,
     ):
-        raise NotImplementedError('Need to include this file from past assignment.')
+        # TODO: Implement for Task 2.2.
+        if reduce_size == len(a_storage):
+            res = out[0]
+            for i in a_storage:
+                res = fn(i, res)
+            out[0] = res
+        else:
+            try:    
+                red_dim = next(i for i in range(len(reduce_shape)) if reduce_shape[i] != 1)
+            except:
+                red_dim = 0
+            for i in range(len(out)):
+                out_index = [0] * len(out_shape)
+                count(i, out_shape, out_index)
+                a_pos = index_to_position(out_index, a_strides)
+                args = [out[i], a_storage[a_pos]]
+                args.extend([a_storage[a_pos + j*a_strides[red_dim]] for j in range(1,reduce_size)])
+                
+                res = args[0]
+                for arg in args[1:]:
+                    res = fn(res, arg)
+
+                out[i] = res
+    
 
     return _reduce
 
@@ -184,9 +233,8 @@ def reduce(fn, start=0.0):
         dims (list, optional): list of dims to reduce
         out (:class:`TensorData`, optional): tensor to reduce into
 
-
     Returns:
-        :class:`Tensor` : new tensor
+        :class:`TensorData` : new tensor data
     """
 
     f = tensor_reduce(fn)
