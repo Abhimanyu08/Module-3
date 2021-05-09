@@ -106,25 +106,19 @@ def tensor_zip(fn):
     ):
         # TODO: Implement for Task 2.2.
         for i in range(len(out)):
-            if len(a_storage) > len(b_storage):
-                out_index = [0]*len(out_shape)
-                count(i, out_shape, out_index)
-                in_index = [0]*len(b_shape)
-                broadcast_index(out_index, out_shape, b_shape, in_index)
-                pos = index_to_position(in_index, b_strides)
-                out[i] = fn(a_storage[i], b_storage[pos])
+            out_index = [0]*len(out_shape)
+            count(i, out_shape, out_index)
+            
+            a_index = [0]*len(a_shape)
+            b_index = [0]*len(b_shape)
 
-            elif len(b_storage) > len(a_storage):
-                out_index = [0]*len(out_shape)
-                count(i, out_shape, out_index)
-                in_index = [0]*len(a_shape)
-                broadcast_index(out_index, out_shape, a_shape, in_index)
-                pos = index_to_position(in_index, a_strides)
-                out[i] = fn(a_storage[pos], b_storage[i])
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
 
-            else:
-                out[i] = fn(a_storage[i], b_storage[i])
+            a_pos = index_to_position(a_index, a_strides)
+            b_pos = index_to_position(b_index, b_strides)
 
+            out[i] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip
 

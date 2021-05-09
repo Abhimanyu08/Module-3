@@ -1,7 +1,7 @@
 import minitorch
 import pytest
 from hypothesis import given
-import numba
+from numba import cuda
 from hypothesis.strategies import floats, integers, lists, data, permutations
 from .strategies import tensors, shaped_tensors, assert_close
 
@@ -41,7 +41,7 @@ matmul_tests = [pytest.param(FastTensorBackend, marks=pytest.mark.task3_2)]
 backend_tests = [pytest.param(FastTensorBackend, marks=pytest.mark.task3_1)]
 
 
-if numba.cuda.is_available():
+if cuda.is_available():
     CudaTensorBackend = minitorch.make_tensor_backend(minitorch.CudaOps, is_cuda=True)
     matmul_tests.append(pytest.param(CudaTensorBackend, marks=pytest.mark.task3_4))
     backend_tests.append(pytest.param(CudaTensorBackend, marks=pytest.mark.task3_3))

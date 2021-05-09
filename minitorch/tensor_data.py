@@ -48,7 +48,7 @@ def count(position, shape, out_index):
     """
     # TODO: Implement for Task 2.1.
     pos = int(position)
-    for i in range(len(out_index)-1, -1, -1):
+    for i in range(len(shape)-1, -1, -1):
         out_index[i] = pos%shape[i]
         pos = pos//shape[i]
     
@@ -71,12 +71,10 @@ def broadcast_index(big_index, big_shape, shape, out_index):
         None : Fills in `out_index`.
     """
     # TODO: Implement for Task 2.4.
-    if len(big_index) > len(out_index):
-        bi = big_index[-len(out_index):]
-        bs = big_shape[-len(shape):]
-    else:
-        bi,bs = big_index, big_shape
-    for i in range(len(out_index)-1, -1,-1):
+    
+    bi = big_index[len(big_shape) - len(shape):]
+    bs = big_shape[len(big_shape)-len(shape):]
+    for i in range(len(shape)-1, -1,-1):
         if shape[i] != bs[i]:
             out_index[i] = 0
         else:
