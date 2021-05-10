@@ -289,7 +289,50 @@ def tensor_matrix_multiply(
     """
 
     # TODO: Implement for Task 3.4.
-    raise NotImplementedError('Need to implement for Task 3.4')
+    out_pos = cuda.threadIdx.x + cuda.blockDim.x*cuda.blockIdx.x
+    out_ind = cuda.local.array(MAX_DIMS, dtype = numba.types.int32)
+
+    count(out_pos, out_shape, out_ind)
+
+
+    a_ind = cuda.local.array(MAX_DIMS, dtype = numba.types.int32)
+    b_ind = cuda.local.array(MAX_DIMS, dtype = numba.types.int32)
+
+    a_diff = len(out_shape) - len(a_shape)
+    b_diff = len(out_shape) - len(b_shape)
+
+    for i in range(a_diff, len(out_shape)):
+        if a_shape[i - a_diff] == out_shape[i]:
+            a_ind[i - a_diff] = out_ind[i]
+        else:
+            a_ind[i - a_diff] = 0
+
+    for i in range(b_diff, len(out_shape)):
+        if b_shape[i - b_diff] == out_shape[i]:
+            b_ind[i - b_diff] = out_ind[i]
+        else:
+            b_ind[i - b_diff] = 0
+
+    m = a_shape[-1]
+
+    res = 0.0
+    for i in range(m):
+
+        a_ind[len(a_shape)-1] = i
+        a_pos = index_to_position(a_ind, a_strides)
+        
+        b_ind[len(b_shape)-2] = i
+        b_pos = index_to_position(b_ind, b_strides)
+
+        res += a_storage[a_pos]*b_storage[b_pos]
+
+    if out_pos < out_size:
+        out[out_pos] = res
+
+
+            
+
+
 
 
 def matrix_multiply(a, b):
